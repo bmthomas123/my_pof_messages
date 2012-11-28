@@ -4,7 +4,10 @@
 # A simple script to scrape your pof messages and 
 # print them to single html file. Also outputs to json.
 # 
-# Usage: my_pof_messages.py <username> <password> <output_prefix>
+# Usage: 
+# sudo pip install beautifulsoup4 requests jinja2
+# python my_pof_messages.py <username> <password> <output_prefix>
+# firefox output_prefix.html
 #
 # Author: 
 # Ramin Rahkhamimov
@@ -96,11 +99,11 @@ def save_messages(messages, prefix):
     </html>
     """)
 
-    f = open('%s.html' % prefix, 'w')
-    f.write(template.render(messages=messages))
+    with open('%s.html' % prefix, 'w') as f:
+        f.write(template.render(messages=messages))
 
-    f = open('%s.json' % prefix, 'w')
-    f.write(json.dumps(messages))
+    with open('%s.json' % prefix, 'w') as f:
+        f.write(json.dumps(messages))
 
 if __name__ == '__main__':
     if len(sys.argv) != 4:

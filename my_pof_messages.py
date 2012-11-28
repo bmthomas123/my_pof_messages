@@ -76,12 +76,18 @@ def save_messages(messages, prefix):
         <style>
             .user, .message {
                 display: inline-block;
+                vertical-align: top;
+            }
+            .message { 
+                width: 500px;
+                padding-left: 10px;
             }
         </style>
     </head>
     <body>
+        <ol>
         {% for message in messages %}
-            <div>
+            <li>
             <a href="{{message.user_url}}" class="user">
             <img src="{{message.user_image_url}}"/>
             <div>
@@ -92,9 +98,9 @@ def save_messages(messages, prefix):
             <div class="message">
                 {{message.message}}
             </div>
-            </div>
-            
+            </li>
         {% endfor %}
+        </ol>
     </body>
     </html>
     """)

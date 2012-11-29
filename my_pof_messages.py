@@ -21,6 +21,7 @@ import re
 from jinja2 import Template
 import json
 import sys
+from datetime import datetime
 
 pof_url = lambda x: "https://www.pof.com/%s" % x
 session = requests.session()
@@ -49,24 +50,28 @@ def get_all_message_links(username, password):
     while next_page:
         e = session.get(next_page)
         next_page = append_message_links(e, links)
-    return links
+    return set(links)
 
 def clean_string(string):
     return string.encode('ascii', 'ignore')
+
+def to_date(date_string):
+    return datetime.strptime(date_string, '%m/%d/%Y %I:%M:%S %p')
 
 def parse_all_messages(links):
     messages = []
     for link in links:
         comment_page = session.get(link)
         soup = BeautifulSoup(comment_page.text)
-        message = soup.find(attrs={'style': re.compile('width:500px.*')})
-        user = soup.find('span', 'username-inbox')
-        user_image_url = soup.find('td', attrs={'width':"60px"}).img.attrs['src']
-        messages.append(dict(user_username=clean_string(user.text),
-                             user_url=pof_url(user.a.attrs['href']),
-                             user_image_url=user_image_url,
-                             message=clean_string(message.text)))
-    return messages
+        for message in soup.find_all(attrs={'style': re.compile('width:500px.*')}):
+            user = soup.find('span', 'username-inbox')
+            user_image_url = soup.find('td', attrs={'width':"60px"}).img.attrs['src']
+            messages.append(dict(user_username=clean_string(user.text),
+                                 user_url=pof_url(user.a.attrs['href']),
+                                 user_image_url=user_image_url,
+                                 date=user.parent.find('div').text,
+                                 message=clean_string(message.text)))
+    return sorted(messages, key=lambda m: to_date(m['date']), reverse=True)
 
 
 def save_messages(messages, prefix):
@@ -74,7 +79,7 @@ def save_messages(messages, prefix):
     <html>
     <head>
         <style>
-            .user, .message {
+            .user, .message, .date {
                 display: inline-block;
                 vertical-align: top;
             }
@@ -97,6 +102,9 @@ def save_messages(messages, prefix):
             </a>
             <div class="message">
                 {{message.message}}
+            </div>
+            <div class="date">
+                {{message.date}}
             </div>
             </li>
         {% endfor %}
